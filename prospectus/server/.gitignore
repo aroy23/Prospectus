@@ -1,0 +1,5 @@
+node_modules
+
+
+# ignore admin key 
+prospectus-35l-admin.json
