@@ -26,6 +26,8 @@ export default function PostPage() {
   const [inputText, setInputText] = useState("");
   const [dropdownShown, setDropdownShown] = useState(false);
   const [sortBy, setSortBy] = useState("Most recent");
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,6 +49,94 @@ export default function PostPage() {
     fetchPost();
   }, [postID]);
 
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/comments/post/${postID}`
+        );
+        if (response.data.success) {
+          setComments(response.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+      }
+    };
+
+    fetchComments();
+  }, [postID]);
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+
+    try {
+      const response = await axios.post("http://localhost:8080/api/comments", {
+        text: commentText,
+        postId: postID,
+        userId: "user123", // Replace with actual user ID from auth
+      });
+
+      if (response.data.success) {
+        setComments([response.data.data, ...comments]);
+        setCommentText("");
+      }
+    } catch (err) {
+      console.error("Error posting comment:", err);
+    }
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!inputText) return;
+
+    try {
+      const response = await axios.post("http://localhost:8080/api/comments", {
+        text: inputText,
+        postId: postID,
+        userId: "user123", // Replace with actual user ID from auth
+      });
+
+      if (response.data.success) {
+        setComments([response.data.data, ...comments]);
+        setInputText("");
+        setReviewFormShown(false);
+      }
+    } catch (err) {
+      console.error("Error posting review:", err);
+    }
+  };
+
+  const renderComments = () => (
+    <div className="mt-8">
+      <div className="mb-4">
+        <form onSubmit={handleCommentSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Write a comment..."
+            className="input input-bordered w-full"
+          />
+          <button type="submit" className="btn btn-primary">
+            Post
+          </button>
+        </form>
+      </div>
+      <div className="space-y-4">
+        {comments.map((comment) => (
+          <div key={comment._id} className="p-4 border rounded-lg">
+            <p className="text-sm text-gray-600">@{comment.userID}</p>
+            <p>{comment.text}</p>
+            <p className="text-xs text-gray-400">
+              {new Date(comment.createdAt).toLocaleString()}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   if (loading || !post) {
     return (
       <div>
@@ -65,26 +155,6 @@ export default function PostPage() {
     avatar:
       "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg",
   };
-  const reviews = [];
-
-  function sortReviews() {
-    switch (sortBy) {
-      case "Most recent":
-        return reviews.sort((a, b) => b.time - a.time);
-      case "Least recent":
-        return reviews.sort((a, b) => a.time - b.time);
-      case "Highest rating":
-        return reviews.sort((a, b) =>
-          b.rating === a.rating ? b.time - a.time : b.rating - a.rating
-        );
-      case "Lowest rating":
-        return reviews.sort((a, b) =>
-          a.rating === b.rating ? b.time - a.time : a.rating - b.rating
-        );
-      default:
-        return reviews.sort();
-    }
-  }
 
   return (
     <div>
@@ -127,7 +197,7 @@ export default function PostPage() {
                 absoluteStrokeWidth
                 className="cursor-pointer"
               />
-              {reviews.length}
+              {comments.length}
             </div>
           </div>
         </div>
@@ -151,6 +221,7 @@ export default function PostPage() {
               )}
             </div>
           )}
+          {renderComments()}
         </div>
       </div>
       <div className="w-11/12 mx-auto h-px bg-gray-500"></div>
@@ -187,30 +258,12 @@ export default function PostPage() {
         {reviewFormShown && (
           <div>
             <div className="max-w-3xl mx-auto p-4 border rounded-lg shadow">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!inputText) {
-                    return;
-                  }
-                  const review = generateReview(
-                    allReviews.length,
-                    inputText,
-                    +document.querySelector('input[name="rating-8"]:checked')
-                      .value
-                  );
-                  review.profileID = randomInt(0, 9);
-                  review.postID = post.id;
-                  allReviews.push(review);
-                  allProfiles[review.profileID].reviewIDs.push(review.id);
-                  allPosts[post.id].reviewIDs.push(review.id);
-                  setReviewFormShown(false);
-                }}
-              >
+              <form onSubmit={handleReviewSubmit}>
                 <h1 className="text-2xl mb-2">Add a review</h1>
                 <div className="rating rating-md mb-4">
                   {[1, 2, 3, 4].map((value) => (
                     <input
+                      key={value}
                       type="radio"
                       name="rating-8"
                       value={value}
@@ -231,7 +284,9 @@ export default function PostPage() {
                   className="p-2 border rounded-lg w-full mb-4"
                   placeholder="Review"
                 />
-                <button className="btn">Post</button>
+                <button type="submit" className="btn">
+                  Post
+                </button>
               </form>
             </div>
             <div>
@@ -244,10 +299,19 @@ export default function PostPage() {
             </div>
           </div>
         )}
-        <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 justify-items-center">
-          {sortReviews().map((reviewItem) => (
-            <div className="mb-4">
-              <Review review={reviewItem} />
+        <div className="grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          {comments.map((comment) => (
+            <div
+              key={comment._id}
+              className="w-64 h-auto border-2 p-4 rounded-lg"
+            >
+              <p className="mb-2">{comment.text}</p>
+              <div className="text-sm text-gray-600">
+                <p>@{comment.userID}</p>
+                <p className="text-xs text-gray-400">
+                  {new Date(comment.createdAt).toLocaleString()}
+                </p>
+              </div>
             </div>
           ))}
         </div>

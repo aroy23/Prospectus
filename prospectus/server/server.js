@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const postRoutes = require("./routes/post.route.js");
 const userRoutes = require("./routes/user.route.js");
+const commentRoutes = require("./routes/comment.route.js");
 const path = require("path");
 const fs = require("fs");
 
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json()); // For parsing application/json requests
 app.use("/api/posts", postRoutes); // Using postRoutes for handling post-related routes
 app.use("/api/users", userRoutes);
+app.use("/api/comments", commentRoutes);
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, "uploads");
