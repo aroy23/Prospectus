@@ -8,9 +8,10 @@
 5. touch .env
 6. Inside this .env file put:
 change the name field depending on who you are (angela, jason, will)
+the password is in the group chat
 ```
 PORT=8080
-MONGO_URI=mongodb+srv://(name):cs35l@prospectus.pbsaq.mongodb.net/prospectus?retryWrites=true&w=majority&appName=prospectus  
+MONGO_URI=mongodb+srv://(name):(password)@prospectus.pbsaq.mongodb.net/prospectus?retryWrites=true&w=majority&appName=prospectus  
 ```
 8. cd ..
 9. npm start
