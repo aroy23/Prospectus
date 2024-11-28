@@ -2,11 +2,14 @@
 **FOLLOW THESE STEPS IN ORDER**
 
 1. Clone the branch (user-post-link)
-2. cd prospectus, npm i
-3. cd client, npm i
-4. cd ../server npm i
-5. touch .env
-6. Inside this .env file put:
+2. cd prospectus
+3. npm i
+4. cd client
+5. npm i
+6. cd ../server
+7. npm i
+8. touch .env
+9. Inside this .env file put:
 change the name field depending on who you are (angela, jason, will)
 the password is in the group chat
 ```
