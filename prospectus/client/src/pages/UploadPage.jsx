@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Navbar from "./Navbar.jsx";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 // change the character limit of title and body here
 const TITLELIMIT = 75;
@@ -17,12 +18,12 @@ const formDataToObject = (formData) => {
 
 function UploadPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [titleCount, setTitleCount] = useState(0);
   const [bodyCount, setBodyCount] = useState(0);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [file, setFile] = useState(null);
-  const [userID, setUserID] = useState("");
 
   const handleTitleChange = (event) => {
     const newTitle = event.target.value;
@@ -40,25 +41,28 @@ function UploadPage() {
     setFile(event.target.files[0]);
   };
 
-  const handleUserIDChange = (event) => {
-    setUserID(event.target.value);
-  };
-
   const isTitleLimitReached = titleCount >= TITLELIMIT;
   const isBodyLimitReached = bodyCount >= BODYLIMIT;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (!user) {
+      console.error("No user logged in");
+      navigate("/login");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("body", body);
-    formData.append("userID", userID);
+    formData.append("userID", user.userId);  // Make sure we're using the correct case
     if (file) {
       formData.append("file", file);
     }
 
     try {
+      console.log("Uploading post with userID:", user.userId);
       const response = await axios.post(
         "http://localhost:8080/api/posts",
         formData,
@@ -75,7 +79,6 @@ function UploadPage() {
         setTitle("");
         setBody("");
         setFile(null);
-        setUserID("");
         setTitleCount(0);
         setBodyCount(0);
         // Redirect to posts page
@@ -100,23 +103,6 @@ function UploadPage() {
             className="max-w-sm mx-auto mt-12 bg-local"
           >
             <div className="text-2xl font-bold pb-4">Create Post</div>
-            <div className="mb-7">
-              <label
-                htmlFor="userID"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-black"
-              >
-                User ID<span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="userID"
-                className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
-                placeholder="Enter your user ID"
-                value={userID}
-                onChange={handleUserIDChange}
-                required
-              />
-            </div>
             <div className="mb-7">
               <label
                 htmlFor="title"

@@ -1,4 +1,5 @@
 const User = require("../models/user.model.js");
+const Post = require("../models/post.model.js");
 
 // Get all users
 const getAllUsers = async (req, res) => {
@@ -6,7 +7,7 @@ const getAllUsers = async (req, res) => {
     const users = await User.find();
     res.status(200).json(users);
   } catch (error) {
-    console.error("Error fetching users", err.message);
+    console.error("Error fetching users", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -70,4 +71,46 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, getUser, createUser, updateUser, deleteUser };
+// Get user's posts
+const getUserPosts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log("Getting posts for user:", userId);
+    
+    // Find the user and populate their posts
+    const user = await User.findOne({ userId }).populate({
+      path: 'posts',
+      options: { sort: { createdAt: -1 } }
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    console.log("Found user with posts:", user);
+
+    res.status(200).json({ 
+      success: true, 
+      data: {
+        posts: user.posts,
+        user: {
+          name: user.name,
+          username: user.username,
+          profilePic: user.profilePic
+        }
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching user posts", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { 
+  getAllUsers, 
+  getUser, 
+  createUser, 
+  updateUser, 
+  deleteUser, 
+  getUserPosts 
+};

@@ -1,15 +1,29 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <div className="navbar bg-base-100 fixed top-0 z-10">
       <div className="flex-1">
-        <Link className="btn btn-ghost font-bold italic text-xl" to="..\">
+        <Link className="btn btn-ghost font-bold italic text-xl" to="/">
           prospectus
         </Link>
       </div>
       <div className="flex-none gap-2">
+        {isAuthenticated && (
+          <Link to="/upload" className="btn btn-ghost btn-sm">
+            Upload Post
+          </Link>
+        )}
         <div className="form-control">
           <input
             type="text"
@@ -43,14 +57,31 @@ export default function Navbar() {
             <li>
               <a>Settings</a>
             </li>
-            <li>
-              <a>Logout</a>
-            </li>
+            {isAuthenticated && (
+              <li>
+                <Link to="/upload">Upload Post</Link>
+              </li>
+            )}
+            {isAuthenticated ? (
+              <li>
+                <a onClick={handleLogout}>Logout</a>
+              </li>
+            ) : (
+              <li>
+                <Link to="/login">Login</Link>
+              </li>
+            )}
           </ul>
         </div>
-        <Link to="/posts" className="...">
-          Posts
-        </Link>
+        {isAuthenticated ? (
+          <button onClick={handleLogout} className="btn btn-primary">
+            Sign Out
+          </button>
+        ) : (
+          <Link to="/login" className="btn btn-primary">
+            Login
+          </Link>
+        )}
       </div>
     </div>
   );
