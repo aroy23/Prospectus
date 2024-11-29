@@ -5,6 +5,7 @@ const cors = require("cors");
 const postRoutes = require("./routes/post.route.js");
 const userRoutes = require("./routes/user.route.js");
 const authRoutes = require("./routes/auth.route.js");
+const commentRoutes = require("./routes/comment.route.js");
 const path = require("path");
 const fs = require("fs");
 
@@ -23,6 +24,7 @@ app.use(express.json()); // For parsing application/json requests
 app.use("/api/posts", postRoutes); // Using postRoutes for handling post-related routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes); // Add authentication routes
+app.use("/api/comments", commentRoutes); // Add this line
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, "uploads");
